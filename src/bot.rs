@@ -6,15 +6,6 @@ pub struct Data {} // User data, which is stored and accessible in all command i
 pub type Error = Box<dyn std::error::Error + Send + Sync>;
 pub type Context<'a> = poise::Context<'a, Data, Error>;
 
-use reqwest::Client as HttpClient;
-use serenity::prelude::TypeMapKey;
-
-pub struct HttpKey;
-
-impl TypeMapKey for HttpKey {
-    type Value = HttpClient;
-}
-
 pub async fn start() {
     let token = std::fs::read_to_string(".token").unwrap();
     let intents = serenity::GatewayIntents::all();
@@ -26,7 +17,7 @@ pub async fn start() {
                 Box::pin(event_handler(ctx, event, framework, data))
             },
             prefix_options: poise::PrefixFrameworkOptions {
-                prefix: Some("!".to_string()),
+                prefix: Some("p!".to_string()),
                 ..Default::default()
             },
             ..Default::default()
@@ -34,10 +25,6 @@ pub async fn start() {
         .setup(|ctx, _ready, framework| {
             Box::pin(async move {
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
-                {
-                    let mut data = ctx.data.write().await;
-                    data.insert::<HttpKey>(HttpClient::new());
-                }
                 Ok(Data {})
             })
         })

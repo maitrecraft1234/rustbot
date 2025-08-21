@@ -1,13 +1,14 @@
 use crate::bot::{Context, Error};
-use songbird::{input::{Input, YoutubeDl}, tracks::Track};
+use songbird::{tracks::Track, EventContext, TrackEvent};
 use crate::utils::reply;
 
-use crate::bot::HttpKey;
+// does not work well use songbird::input::YoutubeDl;
 
 /// I PLAY A SONG OR NOT
 #[poise::command(
     slash_command,
     prefix_command,
+    aliases("p", "ambiance"),
     category = "Music",
     help_text_fn = "help_play"
 )]
@@ -15,46 +16,51 @@ pub async fn play(
     ctx: Context<'_>,
     #[description = "Optional YouTube URL or search query"] query: Option<String>,
 ) -> Result<(), Error> {
-    let guild_id = ctx.guild_id().unwrap();
-    let channel_id = ctx
-        .serenity_context()
-        .cache
-        .guild(guild_id).ok_or("guild not in cache ?")?
-        .voice_states
-        .get(&ctx.author().id)
-        .and_then(|vs| vs.channel_id).ok_or("not in cache channel ?")?;
-    let manager = songbird::get(ctx.serenity_context()).await.unwrap().clone();
-    let handler_lock = manager.join(guild_id, channel_id).await.unwrap();
-
-    let http_client = {
-        let data = ctx.serenity_context().data.read().await;
-        data.get::<HttpKey>()
-            .cloned()
-            .expect("Guaranteed to exist in the typemap.")
-    };
-
-
-    // let track = Track::from(file).volume(1.0);
-
-    let track = if let Some(query) = query {
-        // let audio = songbird::input::YoutubeDl::new(http_client, query);
-        // let audio = songbird::input::YoutubeDl::new_ytdl_like("yt-dlp", http_client, query);
-        let audio = YoutubeDl::new_search(http_client, query);
-        let audio = audio.user_args( vec!["-f".to_string(), "bestaudio[ext=m4a]".to_string() ] );
-        Track::from(audio)
-    } else {
-        let file = songbird::input::File::new("./test.m4a"); Track::from(file)
-    };
 
     dbg!(ctx.prefix());
     reply(&ctx, "WE ARE song!!").await?;
 
-    let mut handler = handler_lock.lock().await;
-    handler.enqueue(track).await;
+    add_folder(ctx).await;
+
+    Ok(())
+}
+use std::{fs, io::Read, path::PathBuf};
+
+fn shuffle_with_urandom(vec: &mut Vec<PathBuf>) -> std::io::Result<()> {
+    let mut urandom = fs::File::open("/dev/urandom")?;
+    let mut buf = [0u8; 8];
+
+    for i in (1..vec.len()).rev() {
+        urandom.read_exact(&mut buf)?;
+        let r = u64::from_ne_bytes(buf) as usize;
+        let j = r % (i + 1);
+        vec.swap(i, j);
+    }
 
     Ok(())
 }
 
+async fn add_folder(ctx: Context<'_>) {
+    let guild_id = ctx.guild_id().unwrap();
+    let manager = songbird::get(ctx.serenity_context()).await.unwrap().clone();
+
+    let mut paths: Vec<PathBuf> = fs::read_dir("/home/vj/jrrF")
+        .unwrap()
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .collect();
+    shuffle_with_urandom(&mut paths).unwrap();
+    for entry in paths {
+        let entry = entry;
+        let file = songbird::input::File::new(entry);
+        let track = Track::from(file);
+        if let Some(handler_lock) = manager.get(guild_id) {
+            let mut handler = handler_lock.lock().await;
+            handler.enqueue(track).await;
+        }
+    }
+}
+
 fn help_play() -> String {
-    "play a song from YouTube".to_string()
+    "play a song from the playlist".to_string()
 }
