@@ -8,6 +8,7 @@ pub type Context<'a> = poise::Context<'a, Data, Error>;
 
 pub async fn start() {
     let token = std::fs::read_to_string(".token").unwrap();
+    dbg!(&token);
     let intents = serenity::GatewayIntents::all();
 
     let framework = poise::Framework::builder()
