@@ -14,8 +14,17 @@ use crate::utils::reply;
 )]
 pub async fn play(
     ctx: Context<'_>,
-    #[description = "Optional YouTube URL or search query"] query: Option<String>,
 ) -> Result<(), Error> {
+    let guild_id = ctx.guild_id().unwrap();
+    let channel_id = ctx
+        .serenity_context()
+        .cache
+        .guild(guild_id).ok_or("guild not in cache ?")?
+        .voice_states
+        .get(&ctx.author().id)
+        .and_then(|vs| vs.channel_id).ok_or("not in cache channel ?")?;
+    let manager = songbird::get(ctx.serenity_context()).await.unwrap().clone();
+    manager.join(guild_id, channel_id).await.unwrap();
 
     dbg!(ctx.prefix());
     reply(&ctx, "WE ARE song!!").await?;
