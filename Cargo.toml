@@ -5,6 +5,8 @@ edition = "2024"
 
 [dependencies]
 poise = "0.6.1"
+reqwest = "0.12.23"
 serenity = "0.12.4"
-songbird = "0.5.0"
+songbird = { version = "0.5.0", features = ["builtin-queue", "driver"] }
+symphonia = { version = "0.5", features = ["aac", "mp3", "isomp4", "alac"] }
 tokio = { version = "1.47.1", features = ["rt-multi-thread"] }
