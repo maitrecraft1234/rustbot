@@ -44,7 +44,7 @@ async fn add_folder(ctx: Context<'_>) {
     let guild_id = ctx.guild_id().unwrap();
     let manager = songbird::get(ctx.serenity_context()).await.unwrap().clone();
 
-    let mut paths: Vec<PathBuf> = fs::read_dir("/home/vj/jrrF")
+    let mut paths: Vec<PathBuf> = fs::read_dir("./music")
         .unwrap()
         .filter_map(Result::ok)
         .map(|entry| entry.path())
