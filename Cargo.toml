@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+ollama-rs = "0.3.2"
 poise = "0.6.1"
 reqwest = "0.12.23"
 serenity = "0.12.4"
