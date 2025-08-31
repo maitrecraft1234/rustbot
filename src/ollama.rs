@@ -1,8 +1,5 @@
-use std::sync::Arc;
-
 use ollama_rs::{Ollama, generation::completion::request::GenerationRequest};
-use serenity::all::{CacheHttp, Http, Message};
-use serenity::client::Context;
+use serenity::all::{CacheHttp, Message};
 
 const MODEL: &str = "gemma2:2b";
 

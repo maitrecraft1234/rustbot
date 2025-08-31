@@ -1,4 +1,4 @@
-use crate::bot::{Error, Context};
+use crate::{bot::{Context, Error, SongInfo}, utils::save_song_info};
 
 /// change the volume !
 #[poise::command(
@@ -18,6 +18,11 @@ pub async fn volume(
         let handler = handler_lock.lock().await;
         if let Some(track) = handler.queue().current() {
             track.set_volume(vol)?;
+            let uuid = track.uuid();
+            let name = &ctx.data().song_paths.lock().await[&uuid];
+            let mut song_store = ctx.data().song_store.lock().await;
+            song_store.insert(name.clone(), SongInfo { volume: vol }).unwrap();
+            save_song_info(&song_store);
             ctx.reply(format!("🔊 Volume set to {vol}")).await?;
         } else {
             ctx.reply("Nothing is playing!").await?;

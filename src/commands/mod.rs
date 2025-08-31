@@ -18,5 +18,6 @@ pub fn commands() -> Vec<poise::Command<Data, Error>> {
         music::pause::pause(),
         music::resume::resume(),
         music::volume::volume(),
+        music::join::join(),
     ]
 }
