@@ -13,48 +13,35 @@ struct NowPlayingHandler {
     title: String,
 }
 
+#[async_trait::async_trait]
 impl VoiceEventHandler for NowPlayingHandler {
-    // I have no clue why this can't just be async but ok
-    fn act<'life0, 'life1, 'life2, 'async_trait>(
-        &'life0 self,
-        ctx: &'life1 EventContext<'life2>,
-    ) -> ::core::pin::Pin<
-        Box<
-            dyn ::core::future::Future<Output = Option<Event>>
-                + ::core::marker::Send
-                + 'async_trait,
-        >,
-    >
-    where
-        'life0: 'async_trait,
-        'life1: 'async_trait,
-        'life2: 'async_trait,
-        Self: 'async_trait,
+    async fn act(
+        &self,
+        ctx: &EventContext<'_>,
+    ) -> Option<Event>
     {
         let ctx_clone = self.ctx.clone();
         let title = self.title.clone();
 
-        Box::pin(async move {
-            match ctx {
-                EventContext::Track(track_list) => {
-                    for (state, _) in *track_list {
-                        if state.playing == PlayMode::Play {
-                            ctx_clone.set_presence(
-                                Some(serenity::ActivityData::playing(&title)),
-                                serenity::OnlineStatus::Online,
-                            )
-                        } else {
-                            ctx_clone.set_presence(
-                                Some(default_activity()),
-                                serenity::OnlineStatus::Online,
-                            )
-                        }
+        match ctx {
+            EventContext::Track(track_list) => {
+                for (state, _) in *track_list {
+                    if state.playing == PlayMode::Play {
+                        ctx_clone.set_presence(
+                            Some(serenity::ActivityData::playing(&title)),
+                            serenity::OnlineStatus::Online,
+                        )
+                    } else {
+                        ctx_clone.set_presence(
+                            Some(default_activity()),
+                            serenity::OnlineStatus::Online,
+                        )
                     }
                 }
-                _ => {}
             }
-            None
-        })
+            _ => {}
+        }
+        None
     }
 }
 
