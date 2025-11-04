@@ -99,7 +99,8 @@ async fn add_song(ctx: Context<'_>, path: PathBuf) {
     if let Some(handler_lock) = manager.get(guild_id) {
         let mut handler = handler_lock.lock().await;
         let path_string = path.into_os_string().into_string().unwrap();
-        let vol = ctx.data().song_store.lock().await[&path_string].volume;
+        let vols = ctx.data().song_store.lock().await;
+        let vol = vols.get(&path_string).unwrap_or_default().volume;
         ctx.data()
             .song_paths
             .lock()

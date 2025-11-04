@@ -13,6 +13,14 @@ pub struct SongInfo {
     pub volume: f32,
 }
 
+impl Default for SongInfo {
+    fn default() -> Self {
+        SongInfo {
+            volume: 1.0,
+        }
+    }
+}
+
 pub type SongStore = HashMap<String, SongInfo>;
 
 pub struct Data {
