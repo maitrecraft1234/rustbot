@@ -13,9 +13,9 @@ pub struct SongInfo {
     pub volume: f32,
 }
 
-impl Default for SongInfo {
+impl Default for &SongInfo {
     fn default() -> Self {
-        SongInfo {
+        &SongInfo {
             volume: 1.0,
         }
     }
