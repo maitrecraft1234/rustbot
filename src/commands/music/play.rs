@@ -21,7 +21,8 @@ impl VoiceEventHandler for NowPlayingHandler {
     ) -> Option<Event>
     {
         let ctx_clone = self.ctx.clone();
-        let title = self.title.clone();
+        let path = self.title.clone();
+        let title = path.rsplit_once('/').map_or(path.clone(), |(_, post)| post.to_owned());
 
         match ctx {
             EventContext::Track(track_list) => {
