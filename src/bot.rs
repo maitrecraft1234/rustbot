@@ -4,7 +4,7 @@ use crate::{commands, events::event_handler, utils::default_activity};
 use ollama_rs::Ollama;
 use poise::serenity_prelude as serenity;
 use serde::{Deserialize, Serialize};
-use ::serenity::all::ActivityData;
+// use ::serenity::all::ActivityData;
 use songbird::SerenityInit;
 use tokio::sync::Mutex;
 
