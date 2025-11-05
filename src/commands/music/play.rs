@@ -22,8 +22,8 @@ impl VoiceEventHandler for NowPlayingHandler {
     {
         let ctx_clone = self.ctx.clone();
         let title = self.title.clone();
-        let title = title.rsplit_once('/').unwrap().1;
-        let title = title.rsplit_once('.').unwrap().0;
+        let title = title.rsplit_once('/').unwrap_or(("", "how")).1;
+        let title = title.rsplit_once('.').unwrap_or(("", "how2")).0;
 
         match ctx {
             EventContext::Track(track_list) => {
