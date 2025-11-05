@@ -21,15 +21,16 @@ impl VoiceEventHandler for NowPlayingHandler {
     ) -> Option<Event>
     {
         let ctx_clone = self.ctx.clone();
-        let path = self.title.clone();
-        let title = path.rsplit_once('/').map_or(path.clone(), |(_, post)| post.to_owned());
+        let title = self.title.clone();
+        let title = title.rsplit_once('/').unwrap().1;
+        let title = title.rsplit_once('.').unwrap().0;
 
         match ctx {
             EventContext::Track(track_list) => {
                 for (state, _) in *track_list {
                     if state.playing == PlayMode::Play {
                         ctx_clone.set_presence(
-                            Some(serenity::ActivityData::playing(&title)),
+                            Some(serenity::ActivityData::playing(title)),
                             serenity::OnlineStatus::Online,
                         )
                     } else {
