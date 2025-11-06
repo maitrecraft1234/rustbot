@@ -21,7 +21,7 @@ pub async fn volume(
             let uuid = track.uuid();
             let name = &ctx.data().song_paths.lock().await[&uuid];
             let mut song_store = ctx.data().song_store.lock().await;
-            song_store.insert(name.clone(), SongInfo { volume: vol }).unwrap();
+            let _ = song_store.insert(name.clone(), SongInfo { volume: vol });
             save_song_info(&song_store);
             ctx.reply(format!("🔊 Volume set to {vol}")).await?;
         } else {
