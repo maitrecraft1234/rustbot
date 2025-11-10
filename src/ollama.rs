@@ -5,21 +5,21 @@ use regex::Regex;
 const MODEL: &str = "gemma2:2b";
 
 pub fn strip_text(input: String) -> String {
-    let foo = input
+    let post_colon = input // In the case of the response being of the shape "Bot : answer" it will remove the prefix
         .split_once(":")
         .unwrap_or(("", ""))
         .1;
-    if foo == "" { input }
+    if post_colon == "" { input }
     else {
-        let bar = foo
+        let pre_newline = post_colon // In teh case of the response being more than one message, will only keep the first line
             .split_once("\n")
             .unwrap_or(("", ""))
             .0;
-        if bar == "" {
-            foo.to_string()
+        if psot_newline == "" {
+            post_colon.to_string()
         }
         else {
-            bar.to_string()
+            pre_newline.to_string()
         }
         
     }
