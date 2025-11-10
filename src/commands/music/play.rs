@@ -1,4 +1,6 @@
 use crate::utils::{default_activity, reply};
+use rand::rng;
+use rand::seq::SliceRandom;
 use crate::{
     bot::{Context, Error},
     commands::music,
@@ -7,6 +9,7 @@ use songbird::tracks::{PlayMode, Track};
 use poise::serenity_prelude as serenity;
 use songbird::{EventHandler as VoiceEventHandler, TrackEvent};
 use songbird::{Event, EventContext};
+use std::{fs, path::PathBuf};
 
 struct NowPlayingHandler {
     ctx: serenity::Context,
@@ -63,21 +66,6 @@ pub async fn play(ctx: Context<'_>) -> Result<(), Error> {
     add_folder(ctx).await;
     Ok(())
 }
-use std::{fs, io::Read, path::PathBuf};
-
-fn shuffle_with_urandom(vec: &mut Vec<PathBuf>) -> std::io::Result<()> {
-    let mut urandom = fs::File::open("/dev/urandom")?;
-    let mut buf = [0u8; 8];
-
-    for i in (1..vec.len()).rev() {
-        urandom.read_exact(&mut buf)?;
-        let r = u64::from_ne_bytes(buf) as usize;
-        let j = r % (i + 1);
-        vec.swap(i, j);
-    }
-
-    Ok(())
-}
 
 async fn add_folder(ctx: Context<'_>) {
     let mut paths: Vec<PathBuf> = fs::read_dir("./music")
@@ -85,7 +73,7 @@ async fn add_folder(ctx: Context<'_>) {
         .filter_map(Result::ok)
         .map(|entry| entry.path())
         .collect();
-    shuffle_with_urandom(&mut paths).unwrap();
+    paths.shuffle(&mut rng());
     for entry in paths {
         add_song(ctx, entry).await
     }
