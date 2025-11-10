@@ -15,7 +15,7 @@ pub fn strip_text(input: String) -> String {
             .split_once("\n")
             .unwrap_or(("", ""))
             .0;
-        if psot_newline == "" {
+        if pre_newline == "" {
             post_colon.to_string()
         }
         else {
