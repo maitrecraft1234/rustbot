@@ -4,26 +4,33 @@ use regex::Regex;
 
 const MODEL: &str = "gemma2:2b";
 
-pub fn strip_text(input: String) -> String {
-    let post_colon = input // In the case of the response being of the shape "Bot : answer" it will remove the prefix
-        .split_once(":")
-        .unwrap_or(("", ""))
-        .1;
-    if post_colon == "" { input }
-    else {
-        let pre_newline = post_colon // In teh case of the response being more than one message, will only keep the first line
-            .split_once("\n")
-            .unwrap_or(("", ""))
-            .0;
-        if pre_newline == "" {
-            post_colon.to_string()
+
+pub fn format_response(input: String, splitter: &str, slot: bool) -> String {
+    let _slot = if slot { 1 } else { 0 };
+    let parts = input.split_once(&splitter);
+    let output = match parts {
+         Some((prefix, suffix)) => {
+            if slot { suffix } else { prefix }
+        },
+        None => {
+            return input
         }
-        else {
-            pre_newline.to_string()
-        }
-        
-    }
+    };
+    output.to_string() 
 }
+
+pub fn remove_quotes_around_string(input: String) -> String {
+    input.trim_matches(|c| c == '\"' || c == '\'' || c == ' ').to_string()
+}
+
+pub fn format_ollama_response(input: String) -> String {
+    // This function as well as the two above need be removed once
+    //the prompt is good enough they are not needed anymore.
+    let post_colon = format_response(input, ":", true); // In the case of the response being of the shape "Bot : answer" it will remove the prefix
+    let pre_newline = format_response(post_colon, "\n", false); // In the case of the response being more than one message, will only keep the first line
+    remove_quotes_around_string(pre_newline)
+}
+
 
 pub async fn ollama_generate(ollama: &Ollama, prompt: &str) -> String {
     println!("Generating with ollama with prompt: {prompt}");
@@ -34,7 +41,22 @@ pub async fn ollama_generate(ollama: &Ollama, prompt: &str) -> String {
         .response;
     println!("ollama response: {res}");
 
-    strip_text(res).trim_matches(|c| c == '\"' || c == '\'' || c == ' ').to_string()
+    format_ollama_response(res)
+}
+
+async fn get_nick_from_str_id(
+    user_id_str: &str,
+    g_id: serenity::model::id::GuildId,
+    cachehttp: &impl CacheHttp,
+) -> String {
+    if let Ok(user_id_u64) = user_id_str.parse::<u64>() {
+        let user_id = serenity::model::id::UserId::new(user_id_u64);
+
+        if let Ok(member) = g_id.member(cachehttp, user_id).await {
+            let display_name = member.nick.as_deref().unwrap_or(&member.user.name).to_string();
+            display_name
+        } else { "unknown".to_string() }
+    } else { "unknown".to_string() }
 }
 
 async fn replace_mentions_with_nicknames(
@@ -46,28 +68,23 @@ async fn replace_mentions_with_nicknames(
     if let Some(g_id) = guild_id {
         let mut replacements: Vec<(String, String)> = Vec::new();
 
-        // Iterate over matches in the *original* content
+        // On construit une substitution
         for cap_match in mention_regex.find_iter(&content) {
             let full_mention = cap_match.as_str(); 
             let user_id_str_cap = mention_regex.captures(full_mention).unwrap();
 
-            if let Some(user_id_str) = user_id_str_cap.get(1) { 
-                if let Ok(user_id_u64) = user_id_str.as_str().parse::<u64>() {
-                    let user_id = serenity::model::id::UserId::new(user_id_u64);
-
-                    if let Ok(member) = g_id.member(cachehttp, user_id).await {
-                        let display_name = member.nick.as_deref().unwrap_or(&member.user.name).to_string();
-                        replacements.push((full_mention.to_string(), display_name));
-                    }
-                }
+            if let Some(user_id_str) = user_id_str_cap.get(1) {
+                let display_name = get_nick_from_str_id(user_id_str.into(), g_id, cachehttp).await;
+                replacements.push((full_mention.to_string(), display_name));
             }
         }
 
+        // Puis on l'applique
         for (original, replacement) in replacements {
             content = content.replace(&original, &replacement);
         }
     }
-    content // Return the modified string
+    content
 }
 
 
