@@ -13,6 +13,8 @@ struct NowPlayingHandler {
     title: String,
 }
 
+const VOLUME_REBASE : f32 = 0.1;
+
 #[async_trait::async_trait]
 impl VoiceEventHandler for NowPlayingHandler {
     async fn act(
@@ -108,7 +110,7 @@ async fn add_song(ctx: Context<'_>, path: PathBuf) {
             .lock()
             .await
             .insert(track.uuid, path_string.clone());
-        let handle = handler.enqueue(track.volume(vol)).await;
+        let handle = handler.enqueue(track.volume(vol * VOLUME_REBASE)).await;
         handle.add_event(Event::Track(TrackEvent::Play), NowPlayingHandler {
             ctx: ctx.serenity_context().clone(),
             title: path_string,

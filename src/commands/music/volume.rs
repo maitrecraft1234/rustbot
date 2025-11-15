@@ -9,7 +9,7 @@ use crate::{bot::{Context, Error, SongInfo}, utils::save_song_info};
 )]
 pub async fn volume(
     ctx: Context<'_>,
-    #[description = "Volume between 0.0 and 2.0"] vol: f32,
+    #[description = "Volume expressed as a positive float."] vol: f32,
 ) -> Result<(), Error> {
     let guild_id = ctx.guild_id().unwrap();
     let manager = songbird::get(ctx.serenity_context()).await.unwrap().clone();
@@ -20,10 +20,12 @@ pub async fn volume(
             track.set_volume(vol)?;
             let uuid = track.uuid();
             let name = &ctx.data().song_paths.lock().await[&uuid];
-            let mut song_store = ctx.data().song_store.lock().await;
-            let _ = song_store.insert(name.clone(), SongInfo { volume: vol });
-            save_song_info(&song_store);
-            ctx.reply(format!("🔊 Volume set to {vol}")).await?;
+            let mut volumes = ctx.data().song_store.lock().await;
+            let current_song_volume = volumes.get(name).unwrap_or_default().volume;
+            let newvol = vol * current_song_volume;
+            let _ = volumes.insert(name.clone(), SongInfo { volume: newvol});
+            save_song_info(&volumes);
+            ctx.reply(format!("🔊 Volume set to {newvol}")).await?;
         } else {
             ctx.reply("Nothing is playing!").await?;
         }
@@ -32,5 +34,5 @@ pub async fn volume(
 }
 
 fn help_volume() -> String {
-    "Set playback volume (0.0 - 2.0).".to_string()
+    "Set playback volume.".to_string()
 }
