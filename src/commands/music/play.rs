@@ -16,7 +16,7 @@ struct NowPlayingHandler {
     title: String,
 }
 
-const VOLUME_REBASE : f32 = 0.1;
+pub const VOLUME_REBASE : f32 = 0.1;
 
 #[async_trait::async_trait]
 impl VoiceEventHandler for NowPlayingHandler {

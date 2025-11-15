@@ -1,4 +1,4 @@
-use crate::{bot::{Context, Error, SongInfo}, utils::save_song_info};
+use crate::{bot::{Context, Error, SongInfo}, utils::save_song_info, commands::music::play::VOLUME_REBASE};
 
 /// change the volume !
 #[poise::command(
@@ -22,7 +22,7 @@ pub async fn volume(
             let mut volumes = ctx.data().song_store.lock().await;
             let current_song_volume = volumes.get(name).unwrap_or_default().volume;
             let newvol = vol * current_song_volume;
-            track.set_volume(newvol)?;
+            track.set_volume(newvol * VOLUME_REBASE)?;
             let _ = volumes.insert(name.clone(), SongInfo { volume: newvol});
             save_song_info(&volumes);
             ctx.reply(format!("🔊 Volume set to {newvol}")).await?;
