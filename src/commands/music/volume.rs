@@ -17,12 +17,12 @@ pub async fn volume(
     if let Some(handler_lock) = manager.get(guild_id) {
         let handler = handler_lock.lock().await;
         if let Some(track) = handler.queue().current() {
-            track.set_volume(vol)?;
             let uuid = track.uuid();
             let name = &ctx.data().song_paths.lock().await[&uuid];
             let mut volumes = ctx.data().song_store.lock().await;
             let current_song_volume = volumes.get(name).unwrap_or_default().volume;
             let newvol = vol * current_song_volume;
+            track.set_volume(newvol)?;
             let _ = volumes.insert(name.clone(), SongInfo { volume: newvol});
             save_song_info(&volumes);
             ctx.reply(format!("🔊 Volume set to {newvol}")).await?;
