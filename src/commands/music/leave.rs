@@ -1,4 +1,4 @@
-use crate::bot::{Context, Error};
+use crate::{bot::{Context, Error}, utils};
 
 /// Leave the voice channel
 #[poise::command(
@@ -17,6 +17,7 @@ pub async fn leave(ctx: Context<'_>) -> Result<(), Error> {
     } else {
         ctx.say("Not in a voice channel").await?;
     }
+    ctx.serenity_context().set_activity(Some(utils::default_activity()));
     Ok(())
 }
 
