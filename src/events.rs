@@ -25,16 +25,17 @@ pub async fn event_handler(
                 new_message.reply(&ctx.http, res).await?;
             }
         }
-        // FullEvent::VoiceStateUpdate { old, new } => {
-        //     new.member;
-        //     if let Some(m) = new.member.clone() {
-        //         m.permissions;
-        //     }
+        // FullEvent::VoiceStateUpdate { _old, _new } => {
+        //     todo!()
+            // new.member;
+            // if let Some(m) = new.member.clone() {
+            //     m.permissions;
+            // }
             // ctx.http.get_channel(new.channel_id).await.inspect(|chanel| {
             //     chanel.guild
             // });
         // }
-        // _ => {}
+        _ => {}
     }
     Ok(())
 }
