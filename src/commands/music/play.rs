@@ -58,7 +58,14 @@ impl VoiceEventHandler for NowPlayingHandler {
     help_text_fn = "help_play"
 )]
 pub async fn play(ctx: Context<'_>, query: Option<Regex>) -> Result<(), Error> {
-    music::join::join_internal(ctx).await?;
+    ctx.defer_ephemeral().await?;
+
+    if let Err(error) = music::join::join_internal(ctx).await {
+        eprintln!("Failed to join voice channel for /play: {error}");
+        reply(&ctx, &format!("Could not join your voice channel: {error}")).await?;
+        return Ok(());
+    }
+
     reply(&ctx, "WE ARE song!!").await?;
 
     add_folder(ctx, query).await;
